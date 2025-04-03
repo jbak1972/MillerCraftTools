@@ -1,0 +1,49 @@
+﻿<Window x:Class="Miller_Craft_Tools.Views.ResultsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Miller Craft Tools - Results" Height="400" Width="600"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- TreeView to display the hierarchical results -->
+        <TreeView x:Name="ResultsTreeView" Grid.Row="0" Margin="0,0,0,10">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Categories}">
+                    <!-- Level Node -->
+                    <TextBlock Text="{Binding LevelName}" FontWeight="Bold" />
+                    <HierarchicalDataTemplate.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Elements}">
+                            <!-- Category Node -->
+                            <TextBlock Text="{Binding CategoryName}" FontStyle="Italic" />
+                            <HierarchicalDataTemplate.ItemTemplate>
+                                <!-- Element Node -->
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Hyperlink NavigateUri="{Binding ElementId}" RequestNavigate="Hyperlink_RequestNavigate">
+                                            <TextBlock Text="{Binding ElementName}" />
+                                        </Hyperlink>
+                                        <!-- Add ContextMenu for ElementNode -->
+                                        <TextBlock.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Select" Click="SelectMenuItem_Click" Tag="{Binding ElementId}" />
+                                                <MenuItem Header="Zoom" Click="ZoomMenuItem_Click" Tag="{Binding ElementId}" />
+                                                <MenuItem Header="Isolate" Click="IsolateMenuItem_Click" Tag="{Binding ElementId}" />
+                                            </ContextMenu>
+                                        </TextBlock.ContextMenu>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </HierarchicalDataTemplate.ItemTemplate>
+                        </HierarchicalDataTemplate>
+                    </HierarchicalDataTemplate.ItemTemplate>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <!-- Close Button -->
+        <Button Content="Close" Grid.Row="1" Width="100" Height="30" HorizontalAlignment="Right" Click="CloseButton_Click" />
+    </Grid>
+</Window>

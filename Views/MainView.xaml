@@ -1,0 +1,44 @@
+﻿<Window x:Class="Miller_Craft_Tools.Views.MainView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Miller Craft Utilities" Height="600" Width="600" WindowStartupLocation="CenterScreen">
+    <TabControl>
+        <!-- Dashboard Tab -->
+        <TabItem Header="Dashboard">
+            <StackPanel>
+                <GroupBox Header="Drafting Shortcuts" Margin="10" Padding="10">
+                    <StackPanel>
+                        <Button Content="Synch sp.Area" ToolTip="Synchronize sp.Area with Area for all Filled Regions" Width="200" Height="30" Margin="10" Tag="SyncFilledRegions" Click="Button_Click"/>
+                        <Button Content="Renumber Windows" ToolTip="Renumber window Marks incrementally by setting start number and selecting windows in order." Width="200" Height="30" Margin="10" Tag="RenumberWindows" Click="Button_Click"/>
+                        <Button Content="Renumber Views on Sheet" ToolTip="Renumber views on the selected sheet." Width="200" Height="30" Margin="10" Tag="RenumberViews" Click="Button_Click"/>
+                        <Button Content="Group Elements by Level" ToolTip="Select levels and get a list of associated elements grouped by level." Width="200" Height="30" Margin="10" Tag="GroupByLevel" Click="Button_Click"/>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </TabItem>
+
+        <!-- Project Maintenance Tab -->
+        <TabItem Header="Project Maintenance">
+            <StackPanel>
+                <GroupBox Header="Maintenance Tools" Margin="10" Padding="10">
+                    <StackPanel>
+                        <Button Content="Export Standards" ToolTip="Export project standards (families, line weights, fill styles) to a JSON file." Width="200" Height="30" Margin="10" Tag="ExportStandards" Click="Button_Click"/>
+                        <!-- Add the new button for SetupStandardsCommand -->
+                        <Button Content="Setup Standards" ToolTip="Apply the project standards version to the project and families." Width="200" Height="30" Margin="10" Command="{Binding SetupStandardsCommand}"/>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </TabItem>
+
+        <!-- Sheet Utilities Tab -->
+        <TabItem Header="Sheet Utilities">
+            <StackPanel>
+                <GroupBox Header="Sheet Tools" Margin="10" Padding="10">
+                    <StackPanel>
+                        <Button Content="Copy to Sheets" ToolTip="Copy revision clouds, tags, and/or legends to all other sheets." Width="200" Height="30" Margin="10" Tag="CopyToSheets" Click="Button_Click"/>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </TabItem>
+    </TabControl>
+</Window>
