@@ -14,6 +14,9 @@ namespace Miller_Craft_Tools
         {
             try
             {
+                // Store the ExternalCommandData in CommandDataHolder
+                CommandDataHolder.CommandData = commandData;
+
                 UIDocument uidoc = commandData.Application.ActiveUIDocument;
                 Document doc = uidoc.Document;
 
@@ -36,6 +39,11 @@ namespace Miller_Craft_Tools
                 message = ex.Message;
                 TaskDialog.Show("Error", $"An error occurred: {ex.Message}");
                 return Result.Failed;
+            }
+            finally
+            {
+                // Clear the CommandDataHolder to avoid holding onto the reference after the command finishes
+                CommandDataHolder.CommandData = null;
             }
         }
     }
