@@ -20,8 +20,19 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-	  <Compile Remove="Controller\FamilyController.cs" />
+	  <Compile Remove="Archive\Controller\FamilyController.cs" />
 	  <Compile Remove="DataConnection.cs" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Compile Include="Archive\ViewModel\AuditViewModel.txt" />
+	  <Compile Include="Archive\ViewModel\CopyToSheetsViewModel.txt" />
+	  <Compile Include="Archive\ViewModel\LevelNode.txt" />
+	  <Compile Include="Archive\ViewModel\MainViewModel.txt" />
+	  <Compile Include="Archive\ViewModel\ViewModelBase.txt" />
+	  <Compile Include="Archive\Controller\DraftingController.txt" />
+	  <Compile Include="Archive\Controller\InspectionController.txt" />
+	  <Compile Include="Archive\Controller\SheetUtilitiesController.txt" />
 	</ItemGroup>
 
   <ItemGroup>
@@ -48,9 +59,16 @@
     <None Update="Miller_Craft_Tools.addin">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Update="Standards\ProjectStandards.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Core\Utilities\" />
+    <Folder Include="Features\ProjectSetup\" />
+    <Folder Include="Features\StandardManagement\" />
+    <Folder Include="Resources\" />
+    <Folder Include="UI\Controls\" />
+    <Folder Include="UI\Dialogs\" />
+    <Folder Include="UI\Panels\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

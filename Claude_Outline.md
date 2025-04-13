@@ -60,3 +60,54 @@ Here's a preliminary architecture for a scalable Revit plugin that can accommoda
    - Design database schema
    - Create data exchange components
    - Build admin interface for project data
+
+
+<details>
+<summary><code>DrafterToolkit/</code></summary>
+
+<details>
+<summary><code>DrafterToolkit.Core/</code> – Core functionality</summary>
+
+<details>
+<summary><code>Application/</code> – Application-level logic</summary>
+
+- `AppStartup.cs` – Plugin entry point  
+- `CommandLoader.cs` – Dynamic command registration  
+- `AppSettings.cs` – Application settings  
+
+</details>
+
+<details>
+<summary><code>Infrastructure/</code> – Core services</summary>
+
+- `Logging/` – Logging functionality  
+- `Configuration/` – Configuration management  
+- `Events/` – Custom event system  
+
+</details>
+
+- `Utilities/` – Helper utilities  
+
+</details>
+
+<details>
+<summary><code>DrafterToolkit.UI/</code> – UI components</summary>
+
+- `Controls/` – Custom controls  
+- `Dialogs/` – Dialog windows  
+- `Panels/` – Dockable panels  
+
+</details>
+
+<details>
+<summary><code>DrafterToolkit.Features/</code> – Feature modules</summary>
+
+- `EfficiencyTools/` – Efficiency-related features  
+- `StandardsManagement/` – Standards-related features  
+- `ProjectSetup/` – Project setup features  
+
+</details>
+
+- `DrafterToolkit.Installer/` – Deployment project  
+
+</details>
