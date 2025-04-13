@@ -1,76 +1,36 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.ExtensibleStorage;
+using Autodesk.Revit.UI;
+using Microsoft.VisualBasic.FileIO;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace Miller_Craft_Tools.ViewModel
 {
     public class SchemaInfo
     {
         public string Name { get; set; }
-        public string Size { get; set; } // Size in KB
+        public string Size { get; set; }
     }
 
-    public class AuditViewModel : INotifyPropertyChanged
+    public class AuditViewModel : ViewModelBase
     {
-        private readonly Document _doc;
-        private string _fileSize;
-        private string _elementCount;
-        private string _familyCount;
-        private string _warningCount;
-        private string _dwgImportCount;
-        private List<SchemaInfo> _schemas; // New property for schemas
-
-        public string FileSize
+        public string FileSize { get; set; }
+        public int ElementCount { get; set; }
+        public int FamilyCount { get; set; }
+        public int WarningCount { get; set; }
+        public int DwgImportCount { get; set; }
+        public List<SchemaInfo> Schemas { get; set; }
+         public AuditViewModel(Document doc)
         {
-            get => _fileSize;
-            set { _fileSize = value; OnPropertyChanged(); }
-        }
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
 
-        public string ElementCount
-        {
-            get => _elementCount;
-            set { _elementCount = value; OnPropertyChanged(); }
-        }
-
-        public string FamilyCount
-        {
-            get => _familyCount;
-            set { _familyCount = value; OnPropertyChanged(); }
-        }
-
-        public string WarningCount
-        {
-            get => _warningCount;
-            set { _warningCount = value; OnPropertyChanged(); }
-        }
-
-        public string DwgImportCount
-        {
-            get => _dwgImportCount;
-            set { _dwgImportCount = value; OnPropertyChanged(); }
-        }
-
-        public List<SchemaInfo> Schemas
-        {
-            get => _schemas;
-            set { _schemas = value; OnPropertyChanged(); }
-        }
-
-        public AuditViewModel(Document doc)
-        {
-            _doc = doc;
-            GatherStatistics();
-        }
-
-        private void GatherStatistics()
-        {
-            // File size
-            string filePath = _doc.PathName;
+            // Calculate file size
+            string filePath = doc.PathName;
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {
                 FileInfo fileInfo = new FileInfo(filePath);
@@ -78,109 +38,65 @@ namespace Miller_Craft_Tools.ViewModel
             }
             else
             {
-                FileSize = "Not saved";
+                FileSize = "Unknown";
             }
 
-            // Element count
-            FilteredElementCollector collector = new FilteredElementCollector(_doc);
-            ElementCount = collector.WhereElementIsNotElementType().GetElementCount().ToString();
+            // Count elements
+            ElementCount = new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .ToElementIds()
+                .Count;
 
-            // Family count
-            FilteredElementCollector familyCollector = new FilteredElementCollector(_doc)
-                .OfClass(typeof(Family));
-            FamilyCount = familyCollector.GetElementCount().ToString();
+            // Count families
+            FamilyCount = new FilteredElementCollector(doc)
+                .OfClass(typeof(Family))
+                .ToElements()
+                .Count;
 
-            // Warning count
-            WarningCount = _doc.GetWarnings().Count.ToString();
+            // Count warnings
+            WarningCount = doc.GetWarnings().Count;
 
-            // DWG import count
-            var dwgImports = new FilteredElementCollector(_doc)
+            // Count DWG imports
+            DwgImportCount = new FilteredElementCollector(doc)
                 .OfClass(typeof(ImportInstance))
-                .Where(e => e.Category != null && e.Category.Name.Contains("DWG"));
-            DwgImportCount = dwgImports.Count().ToString();
+                .Where(i => i.Category != null && i.Category.Name.Contains("DWG"))
+                .AsEnumerable()
+                .Count();
+            /**
+            // List schemas and their sizes
+            IList<Schema> schemas = Schema.ListSchemas();
 
-            // Schemas and their sizes
-            Schemas = new List<SchemaInfo>();
-            var allSchemas = Schema.ListSchemas(); // Get all schemas in the document
-            foreach (var schema in allSchemas)
+            foreach (Schema schema in schemas)
             {
-                double schemaSizeKB = 0;
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine($"Schema Name: {schema.SchemaName}");
+                sb.AppendLine($"GUID: {schema.GUID}");
+                sb.AppendLine($"Documentation: {schema.Documentation}");
+                sb.AppendLine($"Vendor ID: {schema.VendorId}");
+                sb.AppendLine($"Read Access Level: {schema.ReadAccessLevel}");
+                sb.AppendLine($"Write Access Level: {schema.WriteAccessLevel}");
+                sb.AppendLine($"Field Count: {schema.ListFields().Count}");
 
-                // Find all elements that have data for this schema
-                var elementsWithSchema = new FilteredElementCollector(_doc)
-                    .WhereElementIsNotElementType()
-                    .Where(e => e.GetEntity(schema) != null);
-
-                foreach (Element element in elementsWithSchema)
-                {
-                    Entity entity = element.GetEntity(schema);
-                    if (entity != null && entity.IsValid())
-                    {
-                        // Estimate size by serializing the entity's data
-                        schemaSizeKB += EstimateEntitySize(entity);
-                    }
-                }
-
-                Schemas.Add(new SchemaInfo
-                {
-                    Name = schema.SchemaName,
-                    Size = $"{schemaSizeKB:F2} KB"
-                });
+                TaskDialog.Show("Schema Summary", sb.ToString());
             }
-
-            // Sort schemas by size (descending)
-            Schemas = Schemas.OrderByDescending(s => double.Parse(s.Size.Split(' ')[0])).ToList();
+            **/
         }
 
-        // Helper method to estimate the size of an Entity (extensible storage data)
-        private double EstimateEntitySize(Entity entity)
+        private int EstimateTypeSize(Type type)
         {
-            double sizeInBytes = 0;
+            if (type == typeof(int) || type == typeof(ElementId))
+                return 4;
+            if (type == typeof(double))
+                return 8;
+            if (type == typeof(string))
+                return 50; // average string length guess
+            if (type == typeof(bool))
+                return 1;
+            if (type == typeof(Guid))
+                return 16;
 
-            // Iterate through all fields in the entity
-            foreach (var field in entity.Schema.ListFields())
-            {
-                if (!entity.IsValid()) continue;
-
-                // Get the value of the field
-                object value = entity.Get<object>(field);
-                if (value == null) continue;
-
-                // Estimate size based on the type of data
-                if (value is string str)
-                {
-                    sizeInBytes += Encoding.UTF8.GetByteCount(str);
-                }
-                else if (value is int || value is float)
-                {
-                    sizeInBytes += 4; // 4 bytes for int/float
-                }
-                else if (value is double)
-                {
-                    sizeInBytes += 8; // 8 bytes for double
-                }
-                else if (value is IList<int> intList)
-                {
-                    sizeInBytes += intList.Count * 4;
-                }
-                else if (value is IList<double> doubleList)
-                {
-                    sizeInBytes += doubleList.Count * 8;
-                }
-                else if (value is IList<string> stringList)
-                {
-                    sizeInBytes += stringList.Sum(s => Encoding.UTF8.GetByteCount(s));
-                }
-                // Add more types as needed (e.g., XYZ, UV, etc.)
-            }
-
-            return sizeInBytes / 1024.0; // Convert to KB
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            // Fallback for unknown types (e.g., custom structs, entities)
+            return 32;
         }
     }
 }

@@ -1,50 +1,49 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Miller_Craft_Tools.Controller;
 using Miller_Craft_Tools.ViewModel;
 using Miller_Craft_Tools.Views;
 using System;
+using System.IO;
+using System.Reflection;
 
 namespace Miller_Craft_Tools
 {
-    [Autodesk.Revit.Attributes.Transaction(Autodesk.Revit.Attributes.TransactionMode.Manual)]
-    public class MillerCraftApp : IExternalCommand
+    public class MillerCraftApp : IExternalApplication
     {
-        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        public Result OnStartup(UIControlledApplication application)
         {
             try
             {
-                // Store the ExternalCommandData in CommandDataHolder
-                CommandDataHolder.CommandData = commandData;
+                // Create a custom ribbon tab
+                string tabName = "Miller Craft Tools";
+                application.CreateRibbonTab(tabName);
 
-                UIDocument uidoc = commandData.Application.ActiveUIDocument;
-                Document doc = uidoc.Document;
+                // Create a ribbon panel
+                RibbonPanel panel = application.CreateRibbonPanel(tabName, "Project Maintenance");
 
-                // Instantiate controllers
-                DraftingController draftingController = new DraftingController(doc, uidoc);
-                InspectionController inspectionController = new InspectionController(doc, uidoc);
-                SheetUtilitiesController sheetUtilitiesController = new SheetUtilitiesController(doc, uidoc);
+                // Add a button for "Audit Model"
+                PushButtonData auditButtonData = new PushButtonData("AuditModelButton", "Audit Model", Assembly.GetExecutingAssembly().Location, "Miller_Craft_Tools.Commands.AuditModelCommand");
+                auditButtonData.ToolTip = "Audit the model and display statistics like file size and element counts.";
+                auditButtonData.LongDescription = "This tool analyzes the current Revit model and provides statistics such as file size, element count, family count, warnings, DWG imports, and schema sizes.";
 
-                // Create view and view model
-                MainView view = new MainView();
-                MainViewModel viewModel = new MainViewModel(view, draftingController, inspectionController, sheetUtilitiesController);
+                PushButton auditButton = panel.AddItem(auditButtonData) as PushButton;
 
-                // Show the dialog via the view model
-                viewModel.ShowDialog(uidoc);
+                // Optionally, set an image for the button (place images in the same directory as the DLL)
+                // auditButton.LargeImage = new BitmapImage(new Uri(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AuditModelIcon.png")));
 
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
-                message = ex.Message;
-                TaskDialog.Show("Error", $"An error occurred: {ex.Message}");
+                TaskDialog.Show("Error", $"Failed to initialize Miller Craft Tools: {ex.Message}");
                 return Result.Failed;
             }
-            finally
-            {
-                // Clear the CommandDataHolder to avoid holding onto the reference after the command finishes
-                CommandDataHolder.CommandData = null;
-            }
+        }
+
+        public Result OnShutdown(UIControlledApplication application)
+        {
+            // Cleanup if needed
+            return Result.Succeeded;
         }
     }
 }

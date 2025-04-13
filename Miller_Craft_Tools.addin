@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <RevitAddIns>
-	<AddIn Type="Command">
-		<Text>Miller Craft Tools</Text>
+	<AddIn Type="Application">
+		<Name>Miller Craft Tools</Name>
 		<Description>Utilities for drafting and inspection in Revit</Description>
 		<Assembly>Miller_Craft_Tools.dll</Assembly>
 		<FullClassName>Miller_Craft_Tools.MillerCraftApp</FullClassName>

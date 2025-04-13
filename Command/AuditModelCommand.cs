@@ -1,23 +1,26 @@
-﻿using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Miller_Craft_Tools.ViewModel;
 using Miller_Craft_Tools.Views;
-using System.Windows;
+using System;
 
-namespace Miller_Craft_Tools.Command
+namespace Miller_Craft_Tools.Commands
 {
-    [Transaction(TransactionMode.ReadOnly)]
+    [Autodesk.Revit.Attributes.Transaction(Autodesk.Revit.Attributes.TransactionMode.Manual)]
     public class AuditModelCommand : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             try
             {
-                UIApplication uiApp = commandData.Application;
-                Document doc = uiApp.ActiveUIDocument.Document;
+                UIDocument uidoc = commandData.Application.ActiveUIDocument;
+                if (uidoc == null)
+                {
+                    message = "No active document found.";
+                    return Result.Failed;
+                }
 
-                // Create and show the audit window
+                Document doc = uidoc.Document;
                 AuditViewModel viewModel = new AuditViewModel(doc);
                 AuditView auditView = new AuditView { DataContext = viewModel };
                 auditView.ShowDialog();
@@ -26,7 +29,7 @@ namespace Miller_Craft_Tools.Command
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Audit Model Error");
+                message = $"Failed to execute Audit Model: {ex.Message}";
                 return Result.Failed;
             }
         }
