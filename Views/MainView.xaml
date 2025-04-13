@@ -23,8 +23,9 @@
                 <GroupBox Header="Maintenance Tools" Margin="10" Padding="10">
                     <StackPanel>
                         <Button Content="Export Standards" ToolTip="Export project standards (families, line weights, fill styles) to a JSON file." Width="200" Height="30" Margin="10" Tag="ExportStandards" Click="Button_Click"/>
-                        <!-- Updated button to use Click event with Tag -->
                         <Button Content="Setup Standards" ToolTip="Apply the project standards version to the project and families." Width="200" Height="30" Margin="10" Tag="SetupStandards" Click="Button_Click"/>
+                        <!-- New Audit Model Button -->
+                        <Button Content="Audit Model" ToolTip="Audit the model and display statistics like file size and element counts." Width="200" Height="30" Margin="10" Tag="AuditModel" Click="Button_Click"/>
                     </StackPanel>
                 </GroupBox>
             </StackPanel>

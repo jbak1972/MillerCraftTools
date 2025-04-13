@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using Miller_Craft_Tools.Command;
 using Miller_Craft_Tools.Controller;
 using Miller_Craft_Tools.Views;
+using Miller_Craft_Tools.ViewModel;
 using System;
 using System.Windows.Input;
 
@@ -21,7 +22,8 @@ namespace Miller_Craft_Tools.ViewModel
         public ICommand SyncFilledRegionsCommand { get; }
         public ICommand RenumberWindowsCommand { get; }
         public ICommand RenumberViewsCommand { get; }
-        public ICommand SetupStandardsCommand { get; } // New command
+        public ICommand SetupStandardsCommand { get; }
+        public ICommand AuditModelCommand { get; } // New command
 
         public MainViewModel(MainView view, DraftingController draftingController, InspectionController inspectionController, SheetUtilitiesController sheetUtilitiesController)
         {
@@ -36,7 +38,8 @@ namespace Miller_Craft_Tools.ViewModel
             SyncFilledRegionsCommand = new RelayCommand(SyncFilledRegionsExecute);
             RenumberWindowsCommand = new RelayCommand(RenumberWindowsExecute);
             RenumberViewsCommand = new RelayCommand(RenumberViewsExecute);
-            SetupStandardsCommand = new RelayCommand(SetupStandardsExecute); // Initialize the new command
+            SetupStandardsCommand = new RelayCommand(SetupStandardsExecute);
+            AuditModelCommand = new RelayCommand(AuditModelExecute); // Initialize the new command
 
             // Subscribe to MainView events
             _view.SyncFilledRegionsClicked += (s, e) => SyncFilledRegionsExecute(null);
@@ -45,7 +48,8 @@ namespace Miller_Craft_Tools.ViewModel
             _view.GroupElementsByLevelClicked += (s, e) => GroupElementsByLevelExecute(null);
             _view.ExportStandardsClicked += (s, e) => ExportStandardsExecute(null);
             _view.CopyToSheetsClicked += (s, e) => CopyToSheetsExecute(null);
-            _view.SetupStandardsClicked += (s, e) => SetupStandardsExecute(null); // Subscribe to the new event
+            _view.SetupStandardsClicked += (s, e) => SetupStandardsExecute(null);
+            _view.AuditModelClicked += (s, e) => AuditModelExecute(null); // Subscribe to the new event
         }
 
         public void ShowDialog(UIDocument uidoc)
@@ -110,6 +114,28 @@ namespace Miller_Craft_Tools.ViewModel
             catch (Exception ex)
             {
                 TaskDialog.Show("Error", $"Failed to execute Setup Standards: {ex.Message}");
+            }
+        }
+
+        private void AuditModelExecute(object parameter)
+        {
+            try
+            {
+                ExternalCommandData commandData = CommandDataHolder.CommandData;
+                if (commandData == null)
+                {
+                    TaskDialog.Show("Error", "ExternalCommandData is not available.");
+                    return;
+                }
+
+                Document doc = commandData.Application.ActiveUIDocument.Document;
+                AuditViewModel viewModel = new AuditViewModel(doc);
+                AuditView auditView = new AuditView { DataContext = viewModel };
+                auditView.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("Error", $"Failed to execute Audit Model: {ex.Message}");
             }
         }
     }

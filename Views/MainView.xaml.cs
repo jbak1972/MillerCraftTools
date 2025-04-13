@@ -12,7 +12,8 @@ namespace Miller_Craft_Tools.Views
         public event EventHandler GroupElementsByLevelClicked;
         public event EventHandler ExportStandardsClicked;
         public event EventHandler CopyToSheetsClicked;
-        public event EventHandler SetupStandardsClicked; // New event
+        public event EventHandler SetupStandardsClicked;
+        public event EventHandler AuditModelClicked; // New event
 
         public MainView()
         {
@@ -43,8 +44,11 @@ namespace Miller_Craft_Tools.Views
                     case "CopyToSheets":
                         CopyToSheetsClicked?.Invoke(this, EventArgs.Empty);
                         break;
-                    case "SetupStandards": // New case
+                    case "SetupStandards":
                         SetupStandardsClicked?.Invoke(this, EventArgs.Empty);
+                        break;
+                    case "AuditModel": // New case
+                        AuditModelClicked?.Invoke(this, EventArgs.Empty);
                         break;
                 }
             }
