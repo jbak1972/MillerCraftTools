@@ -36,15 +36,11 @@ namespace Miller_Craft_Tools.ViewModel
             ExportStandardsCommand = new RelayCommand(ExportStandardsExecute);
             CopyToSheetsCommand = new RelayCommand(CopyToSheetsExecute);
             SyncFilledRegionsCommand = new RelayCommand(SyncFilledRegionsExecute);
-            RenumberWindowsCommand = new RelayCommand(RenumberWindowsExecute);
-            RenumberViewsCommand = new RelayCommand(RenumberViewsExecute);
             SetupStandardsCommand = new RelayCommand(SetupStandardsExecute);
             AuditModelCommand = new RelayCommand(AuditModelExecute); // Initialize the new command
 
             // Subscribe to MainView events
             _view.SyncFilledRegionsClicked += (s, e) => SyncFilledRegionsExecute(null);
-            _view.RenumberWindowsClicked += (s, e) => RenumberWindowsExecute(null);
-            _view.RenumberViewsClicked += (s, e) => RenumberViewsExecute(null);
             _view.GroupElementsByLevelClicked += (s, e) => GroupElementsByLevelExecute(null);
             _view.ExportStandardsClicked += (s, e) => ExportStandardsExecute(null);
             _view.CopyToSheetsClicked += (s, e) => CopyToSheetsExecute(null);
@@ -65,15 +61,6 @@ namespace Miller_Craft_Tools.ViewModel
             _draftingController.UpdateDetailItems();
         }
 
-        private void RenumberWindowsExecute(object parameter)
-        {
-            _draftingController.RenumberWindows(_view);
-        }
-
-        private void RenumberViewsExecute(object parameter)
-        {
-            _draftingController.RenumberViewsOnSheet(_view);
-        }
 
         private void GroupElementsByLevelExecute(object parameter)
         {

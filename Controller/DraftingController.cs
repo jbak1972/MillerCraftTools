@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualBasic;
-using Miller_Craft_Tools.Views;
 
 namespace Miller_Craft_Tools.Controller
 {
@@ -20,14 +19,12 @@ namespace Miller_Craft_Tools.Controller
             _uidoc = uidoc;
         }
 
-        // Add SetUIDocument method to update _doc and _uidoc
         public void SetUIDocument(UIDocument uidoc)
         {
             _uidoc = uidoc;
             _doc = uidoc.Document;
         }
 
-        // From DetailController: Sync sp.Area with Area for Filled Regions
         public void UpdateDetailItems()
         {
             FilteredElementCollector collector = new FilteredElementCollector(_doc)
@@ -61,21 +58,12 @@ namespace Miller_Craft_Tools.Controller
             }
         }
 
-        // From FamilyController: Renumber Windows
-        public void RenumberWindows(MainView view)
+        public void RenumberWindows()
         {
             int startNumber = PromptForStartNumber();
             if (startNumber == -1) return;
 
-            view.HideDialog();
-            try
-            {
-                RenumberWindows(startNumber);
-            }
-            finally
-            {
-                view.ShowDialogAgain();
-            }
+            RenumberWindows(startNumber);
         }
 
         private void RenumberWindows(int startNumber)
@@ -162,21 +150,7 @@ namespace Miller_Craft_Tools.Controller
             }
         }
 
-        // From ShowDialogCommand: Renumber Views on Sheet
-        public void RenumberViewsOnSheet(MainView view)
-        {
-            view.HideDialog();
-            try
-            {
-                RenumberViewsOnSheet();
-            }
-            finally
-            {
-                view.ShowDialogAgain();
-            }
-        }
-
-        private void RenumberViewsOnSheet()
+        public void RenumberViewsOnSheet()
         {
             View activeView = _doc.ActiveView;
             ViewSheet selectedSheet;
@@ -315,7 +289,6 @@ namespace Miller_Craft_Tools.Controller
         }
     }
 
-    // Helper classes
     internal class WindowSelectionFilter : ISelectionFilter
     {
         public bool AllowElement(Element elem)
