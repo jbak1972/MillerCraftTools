@@ -45,6 +45,20 @@ namespace Miller_Craft_Tools
                 syncAreaButtonData.LongDescription = "This tool updates the sp.Area parameter of filled regions to match their Area parameter.";
                 PushButton syncAreaButton = panel.AddItem(syncAreaButtonData) as PushButton;
 
+                // Add "MatSynch" button
+                var matSynchData = new PushButtonData(
+                    "MatSynchButton",
+                    "MatSynch",
+                    Assembly.GetExecutingAssembly().Location,
+                    "Miller_Craft_Tools.Command.MaterialSyncCommand"
+                )
+                {
+                    ToolTip = "Synchronize window & door materials from Global Parameters",
+                    LongDescription = "Reads the four Fenestration global parameters and maps their material values onto each placed window and door type’s shared parameters."
+                };
+                panel.AddItem(matSynchData);
+
+
                 return Result.Succeeded;
             }
             catch (Exception ex)
