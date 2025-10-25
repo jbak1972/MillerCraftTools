@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.Attributes;
@@ -30,7 +30,7 @@ namespace Miller_Craft_Tools.Command
             // --- 1) Ensure GPs are enabled ---
             if (!GlobalParametersManager.AreGlobalParametersAllowed(doc))
             {
-                TaskDialog.Show("MatSynch", "Global Parameters are not enabled in this document.");
+                Autodesk.Revit.UI.TaskDialog.Show("MatSynch", "Global Parameters are not enabled in this document.");
                 return Result.Failed;
             }
 
@@ -76,7 +76,7 @@ namespace Miller_Craft_Tools.Command
             var allTypes = windowTypes.Concat(doorTypes).ToList();
             if (!allTypes.Any())
             {
-                TaskDialog.Show("MatSynch", "No window or door types found in the model.");
+                Autodesk.Revit.UI.TaskDialog.Show("MatSynch", "No window or door types found in the model.");
                 return Result.Succeeded;
             }
 
@@ -149,7 +149,7 @@ namespace Miller_Craft_Tools.Command
                 $"Types updated: {updated}\n" +
                 $"Types skipped: {skipped}\n" +
                 $"Errors:        {errors}";
-            TaskDialog.Show("MatSynch", summary);
+            Autodesk.Revit.UI.TaskDialog.Show("MatSynch", summary);
             Console.WriteLine("[MatSynch] " + summary);
 
             return Result.Succeeded;

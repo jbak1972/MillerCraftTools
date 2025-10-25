@@ -1,0 +1,288 @@
+{
+  "ProjectId": "75919faf-457a-4f0e-a01c-9615188290a6",
+  "FileName": "Oliver V4_Jeff_Miller_Designer.rvt",
+  "Parameters": [
+    {
+      "Name": "Category",
+      "Value": "Project Information",
+      "Type": "ElementId",
+      "Update": false
+    },
+    {
+      "Name": "Category",
+      "Value": "Project Information",
+      "Type": "ElementId",
+      "Update": false
+    },
+    {
+      "Name": "Organization Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Organization Description",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Building Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Author",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "IfcSite GUID",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "IfcBuilding GUID",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "IfcProject GUID",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Design Option",
+      "Value": "-1",
+      "Type": "ElementId",
+      "Update": false
+    },
+    {
+      "Name": "Project Issue Date",
+      "Value": "2025.03.01",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Project Status",
+      "Value": "Project Status",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Client Name",
+      "Value": "MONICA LYNN FREELUND TTE",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Project Address",
+      "Value": "1072 HEATH ROAD\r\nSEQUIM, WA  98382",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Project Name",
+      "Value": "FREELUND RESIDENCE",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Project Number",
+      "Value": "2503",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Edited by",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Workset",
+      "Value": "Project Info",
+      "Type": "Integer",
+      "Update": false
+    },
+    {
+      "Name": "Family Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Type Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Area.Wall",
+      "Value": "",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Walls",
+      "Value": "",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Area.Wall.Garage",
+      "Value": "",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Walls.Garage",
+      "Value": "",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Area.Fenstration",
+      "Value": "",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Fenstration",
+      "Value": "",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Structural",
+      "Value": "QUADRA ENGINEERING, SP\r\nHAROLD ANDERSEN PE\r\nP.O. BOX 2094\r\nPORT TOWNSEND, WA\r\n(360) 378-9117\r\nHAROLDTANDERSEN@GMAIL.COM",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Owner",
+      "Value": "MARTYN OLLIVER\r\n311 QUARRY ROAD\r\nPORT TOWNSEND, WA  98365\r\n206-999-6699\r\nMARTYNOLLIVER@GMAIL.COM",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Contractor",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Architect",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Civil",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Client.Name",
+      "Value": "MONICA LYNN FREELUND TTE",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Energy",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Stormwater",
+      "Value": "WASHINGTON PROJECT CONSULTANTS\r\nMARC HORTON PE\r\n212 S RHODODENDRON DR\r\nPORT TOWNSEND, WA 98368\r\n(360) 890-0752\r\nMHORTON@WASHINGTONPROJECTCONSULTANTS.COM",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Drafter",
+      "Value": "MILLER CRAFT\r\nJEFFREY MILLER\r\n213 HONEYMOON LN\r\nSEQUIM, WA  98382\r\n(360) 747-7461\r\nPLANS@MILLERCRAFTLLC.COM",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Designer",
+      "Value": "MILLER CRAFT\r\nJEFFREY MILLER\r\n213 HONEYMOON LN\r\nSEQUIM, WA  98382\r\n(360) 747-7461\r\nPLANS@MILLERCRAFTLLC.COM",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Code.Requirements",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Legal.Text",
+      "Value": "TROXEL SHORT PLAT V10 P68 LOT 2 (V2 P74)",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Parcel.Number",
+      "Value": "043014219040",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Visible",
+      "Value": "",
+      "Type": "Integer",
+      "Update": false
+    },
+    {
+      "Name": "sp.Jurisdiciton",
+      "Value": "CLALLAM COUNTY",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Lot.Size",
+      "Value": "40946 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Land.Use",
+      "Value": "R-1 RURAL RESIDENTIAL",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Setbacks",
+      "Value": "FRONT \u0026 BACK: 15\u0027, SIDES: 10\u0027",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Sewer.Septic",
+      "Value": "SEPTIC #HSEP2025-00011",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Water.Service",
+      "Value": "PRIVATE WELL",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Zoning",
+      "Value": "RR-1:5",
+      "Type": "String",
+      "Update": false
+    }
+  ]
+}

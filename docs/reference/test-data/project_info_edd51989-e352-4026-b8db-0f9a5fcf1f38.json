@@ -1,0 +1,474 @@
+{
+  "ProjectId": "4e6b9e81-eb02-4ab2-8e2a-81dcb871f112",
+  "FileName": "2511_Floras Favors.rvt",
+  "Parameters": [
+    {
+      "Name": "Category",
+      "Value": "Project Information",
+      "Type": "ElementId",
+      "Update": false
+    },
+    {
+      "Name": "Category",
+      "Value": "Project Information",
+      "Type": "ElementId",
+      "Update": false
+    },
+    {
+      "Name": "Organization Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Organization Description",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Building Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Author",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "IfcSite GUID",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "IfcBuilding GUID",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "IfcProject GUID",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Design Option",
+      "Value": "-1",
+      "Type": "ElementId",
+      "Update": false
+    },
+    {
+      "Name": "Project Issue Date",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Project Status",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Client Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Project Address",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Project Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Project Number",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Family Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "Type Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "SR Document GUID",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "RoomBookInternationalBuildNumber",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "BuildingbookInternationalBuildNumber",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "AreaCalculationInternationalBuildNumber",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Visible",
+      "Value": "No",
+      "Type": "Integer",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Area.Wall",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Walls",
+      "Value": "0",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Area.Wall.Garage",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Walls.Garage",
+      "Value": "0",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Area.Fenstration",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Area.Opaque.Door",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Area.Roof",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.Perimeter.Slab",
+      "Value": "0\u0022",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Fenstration",
+      "Value": "0",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Opaque.Door",
+      "Value": "0",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Roof",
+      "Value": "0",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Energy.U.Perimeter.Slab",
+      "Value": "0\u0022",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Client.Name",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Code.Requirements",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Architect",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Contractor",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Owner",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Contact.Structural",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Attached.Garage.Area",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Bathrooms",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Bedrooms",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Residence.Area",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Jurisdiciton",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Land.Use",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Legal.Text",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Lot.Size",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Parcel.Number",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Property.Owner",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.ADU.Area",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Attached.Garage.Area",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Bathrooms",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Bedrooms",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Setbacks",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Sewer.Septic",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Water.Service",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Zoning",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Main.Level.Area",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Upper.Level.Area",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Covered.Porch.Deck",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Open.Porch.Deck",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Detached.Garage",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Upper.Level.Area",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Lower.Level.Area",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Open.Deck.Porch",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Covered.Deck.Porch",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Info.Project.Description",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Zone.Overlay",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.Max.Building.Height",
+      "Value": "",
+      "Type": "String",
+      "Update": false
+    },
+    {
+      "Name": "sp.ADU.Max.Allowable",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Impervious.Ratio",
+      "Value": "0",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Previous.Impervious.Ratio",
+      "Value": "0",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Previous.Impervious",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Impervious.Ratio",
+      "Value": "0",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Existing.Impervious",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    },
+    {
+      "Name": "sp.Proposed.Impervious",
+      "Value": "0 SF",
+      "Type": "Double",
+      "Update": false
+    }
+  ]
+}

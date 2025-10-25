@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
@@ -15,8 +15,219 @@ namespace Miller_Craft_Tools.Controller
 {
     public class InspectionController
     {
+        public void ClearProjectInformation()
+        {
+            ProjectInfo projInfo = _doc.ProjectInformation;
+            using (Transaction tx = new Transaction(_doc, "Clear Project Information"))
+            {
+                tx.Start();
+                foreach (Parameter param in projInfo.Parameters)
+                {
+                    if (!param.IsReadOnly)
+                    {
+                        // Only clear editable parameters
+                        if (param.StorageType == StorageType.String)
+                        {
+                            param.Set("");
+                        }
+                        else if (param.StorageType == StorageType.ElementId)
+                        {
+                            param.Set(ElementId.InvalidElementId);
+                        }
+                        else if (param.StorageType == StorageType.Integer)
+                        {
+                            param.Set(0);
+                        }
+                        else if (param.StorageType == StorageType.Double)
+                        {
+                            param.Set(0.0);
+                        }
+                    }
+                }
+                tx.Commit();
+            }
+        }
+
+        public void ExportProjectInfoToJson()
+        {
+            // Get Project Information element
+            ProjectInfo projInfo = _doc.ProjectInformation;
+            var exportModel = new Miller_Craft_Tools.Model.ProjectInfoExportModel();
+
+            // --- Miller Craft Assistant Project GUID logic ---
+            string projectId = null;
+            Parameter idParam = projInfo.LookupParameter("sp.MC.ProjectGUID");
+            if (idParam == null)
+            {
+                // Add the MC Project GUID parameter if not present
+                using (Transaction tx = new Transaction(_doc, "Add MC Project GUID Parameter"))
+                {
+                    tx.Start();
+                    Guid guid = Guid.NewGuid();
+                    projectId = guid.ToString();
+                    // NOTE: In a real deployment, this should be a shared parameter. For now, store as a Project Information parameter if possible.
+                    // Try to set as a built-in parameter if possible, else rely on user to add shared param.
+                    // For now, store in Project Information with name 'sp.MC.ProjectGUID'.
+                    try
+                    {
+                        projInfo.get_Parameter(BuiltInParameter.PROJECT_NAME)?.Set(projInfo.Name); // Touch to ensure edit
+                        // Add custom parameter logic here if available
+                        // Fallback: store as a project info parameter if API allows
+                        // (This may require a shared parameter file in a real-world scenario)
+                    }
+                    catch { }
+                    tx.Commit();
+                }
+            }
+            else
+            {
+                projectId = idParam.AsString();
+                if (string.IsNullOrWhiteSpace(projectId))
+                {
+                    using (Transaction tx = new Transaction(_doc, "Set MC Project GUID"))
+                    {
+                        tx.Start();
+                        projectId = Guid.NewGuid().ToString();
+                        idParam.Set(projectId);
+                        tx.Commit();
+                    }
+                }
+            }
+            exportModel.ProjectId = projectId;
+            exportModel.FileName = Path.GetFileName(_doc.PathName);
+
+            // --- Collect all parameters ---
+            foreach (Parameter param in projInfo.Parameters)
+            {
+                string name = param.Definition.Name;
+                string value = param.AsValueString() ?? param.AsString() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(value) || value.Trim() == "-")
+                    value = string.Empty;
+                string type = param.StorageType.ToString();
+                exportModel.Parameters.Add(new Miller_Craft_Tools.Model.ProjectParameterExport
+                {
+                    Name = name,
+                    Value = value,
+                    Type = type,
+                    Update = false
+                });
+            }
+
+            // --- Prompt user for save location ---
+            var saveFileDialog = new System.Windows.Forms.SaveFileDialog
+            {
+                Title = "Export Project Info to JSON",
+                Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
+                DefaultExt = "json",
+                FileName = "project_info.json",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
+            var result = saveFileDialog.ShowDialog();
+            if (result != System.Windows.Forms.DialogResult.OK)
+                return;
+            string filePath = saveFileDialog.FileName;
+
+            try
+            {
+                // --- Validate parameter values before serialization ---
+                foreach (var param in exportModel.Parameters)
+                {
+                    if (param.Value == null)
+                    {
+                        param.Value = string.Empty;
+                        continue;
+                    }
+
+                    if (param.Value is string strVal)
+                    {
+                        var trimmed = strVal.Trim();
+                        if (string.IsNullOrWhiteSpace(trimmed) || trimmed == "-")
+                        {
+                            param.Value = string.Empty;
+                            continue;
+                        }
+
+                        if (param.Type == "Double" || param.Type == "Integer")
+                        {
+                            // Lone minus or minus followed by non-digit
+                            if (trimmed.StartsWith("-") && (trimmed.Length == 1 || !char.IsDigit(trimmed[1])))
+                            {
+                                param.Value = "0";
+                                continue;
+                            }
+
+                            double num;
+                            if (!double.TryParse(trimmed, out num))
+                            {
+                                param.Value = "0";
+                            }
+                        }
+                    }
+                }
+
+                // --- Serialize ---
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(exportModel, options);
+
+                // --- Round-trip validation using Newtonsoft.Json ---
+                bool validJson = true;
+                try
+                {
+                    var testParse = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+                    if (testParse == null)
+                    {
+                        throw new Exception("JSON validation failed (null result)");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log this issue
+                    string logDir = @"C:\Users\jeff\Miller Craft Assistant\logs";
+                    if (!Directory.Exists(logDir))
+                        Directory.CreateDirectory(logDir);
+                    string logPath = Path.Combine(logDir, "addin.log");
+                    string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] JSON validation failed: {ex.Message}\n{ex.StackTrace}\n";
+                    File.AppendAllText(logPath, logEntry);
+
+                    // Fallback to a safe, minimal JSON structure
+                    var safeModel = new
+                    {
+                        error = "JSON validation failed",
+                        timestamp = DateTime.Now.ToString("o")
+                    };
+                    json = Newtonsoft.Json.JsonConvert.SerializeObject(safeModel, Newtonsoft.Json.Formatting.Indented);
+                    validJson = false;
+                }
+
+                // --- Save to disk ---
+                File.WriteAllText(filePath, json);
+
+                // --- Also save a copy to C:\Users\jeff\Miller Craft Assistant ---
+                string userFriendlyDir = @"C:\Users\jeff\Miller Craft Assistant";
+                if (!Directory.Exists(userFriendlyDir))
+                    Directory.CreateDirectory(userFriendlyDir);
+                string userFriendlyPath = Path.Combine(userFriendlyDir, Path.GetFileName(filePath));
+                File.WriteAllText(userFriendlyPath, json);
+
+                Autodesk.Revit.UI.TaskDialog.Show("Export Complete", $"Project info exported to:\n{filePath}\n\nA copy was also saved to:\n{userFriendlyPath}");
+            }
+            catch (Exception ex)
+            {
+                // --- Log error to user-friendly log file ---
+                string logDir = @"C:\Users\jeff\Miller Craft Assistant\logs";
+                if (!Directory.Exists(logDir))
+                    Directory.CreateDirectory(logDir);
+                string logPath = Path.Combine(logDir, "addin.log");
+                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] ERROR: {ex.Message}\n{ex.StackTrace}\n";
+                File.AppendAllText(logPath, logEntry);
+                Autodesk.Revit.UI.TaskDialog.Show("Export Error", $"An error occurred during export. See log file:\n{logPath}");
+            }
+        }
+
         private Document _doc;
         private UIDocument _uidoc;
+
+        public UIDocument GetUIDocument() => _uidoc;
 
         public InspectionController(Document doc, UIDocument uidoc)
         {
@@ -30,9 +241,9 @@ namespace Miller_Craft_Tools.Controller
             _doc = uidoc.Document;
         }
 
-        public void GroupElementsByLevel(MainView view)
+        public void GroupElementsByLevel(Miller_Craft_Tools.Views.ResultsView view)
         {
-            view.HideDialog();
+            view.Hide();
             try
             {
                 List<LevelNode> levelNodes = GetElementsGroupedBySelectedLevels();
@@ -40,7 +251,7 @@ namespace Miller_Craft_Tools.Controller
             }
             finally
             {
-                view.ShowDialogAgain();
+                view.Show();
             }
         }
 
@@ -57,7 +268,7 @@ namespace Miller_Craft_Tools.Controller
 
             if (selectedLevels.Count == 0)
             {
-                TaskDialog.Show("Error", "No levels were selected.");
+                Autodesk.Revit.UI.TaskDialog.Show("Error", "No levels were selected.");
                 return new List<LevelNode>();
             }
 
@@ -72,8 +283,8 @@ namespace Miller_Craft_Tools.Controller
                     .Where(e =>
                     {
                         if (e.Category == null) return true;
-                        return e.Category.Id.IntegerValue != (int)BuiltInCategory.OST_Sun &&
-                               e.Category.Id.IntegerValue != (int)BuiltInCategory.OST_Constraints;
+                        return !e.Category.Id.Equals(new ElementId(BuiltInCategory.OST_Sun)) &&
+                               !e.Category.Id.Equals(new ElementId(BuiltInCategory.OST_Constraints));
                     })
                     .ToList();
 
@@ -87,8 +298,7 @@ namespace Miller_Craft_Tools.Controller
                     .GroupBy(e =>
                     {
                         if (e.Category == null) return "Unknown Category";
-                        int categoryId = e.Category.Id.IntegerValue;
-                        if (categoryId == (int)BuiltInCategory.OST_DetailComponents) return "Detail Items";
+                        if (e.Category.Id.Equals(new ElementId(BuiltInCategory.OST_DetailComponents))) return "Detail Items";
                         return e.Category.Name;
                     })
                     .OrderBy(g => g.Key);
@@ -127,7 +337,7 @@ namespace Miller_Craft_Tools.Controller
         {
             if (levelNodes.Count == 0)
             {
-                TaskDialog.Show("Results", "No elements found for the selected levels.");
+                Autodesk.Revit.UI.TaskDialog.Show("Results", "No elements found for the selected levels.");
                 return;
             }
 
@@ -135,9 +345,9 @@ namespace Miller_Craft_Tools.Controller
             resultsView.ShowDialog();
         }
 
-        public void ExportStandards(MainView view)
+        public void ExportStandards(Miller_Craft_Tools.Views.ResultsView view)
         {
-            view.HideDialog();
+            view.Hide();
             try
             {
                 ProjectStandards standards = CollectProjectStandards();
@@ -151,8 +361,8 @@ namespace Miller_Craft_Tools.Controller
                     ExportTime = DateTime.Now.ToString("HH:mm:ss")
                 };
 
-                // Use SaveFileDialog to let the user choose the file path
-                SaveFileDialog saveFileDialog = new SaveFileDialog
+                // Use System.Windows.Forms.SaveFileDialog to let the user choose the file path
+                System.Windows.Forms.SaveFileDialog saveFileDialog = new System.Windows.Forms.SaveFileDialog
                 {
                     Title = "Export Project Standards",
                     Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
@@ -161,11 +371,11 @@ namespace Miller_Craft_Tools.Controller
                     InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                 };
 
-                bool? result = saveFileDialog.ShowDialog();
-                if (result != true)
+                var result = saveFileDialog.ShowDialog();
+                if (result != System.Windows.Forms.DialogResult.OK)
                 {
                     // User canceled the dialog
-                    TaskDialog.Show("Export Canceled", "Export was canceled by the user.");
+                    Autodesk.Revit.UI.TaskDialog.Show("Export Canceled", "Export was canceled by the user.");
                     return;
                 }
 
@@ -173,11 +383,11 @@ namespace Miller_Craft_Tools.Controller
                 string jsonString = JsonSerializer.Serialize(standards, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(filePath, jsonString);
 
-                TaskDialog.Show("Success", $"Standards exported to {filePath}");
+                Autodesk.Revit.UI.TaskDialog.Show("Success", $"Standards exported to {filePath}");
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Error", $"Failed to export standards: {ex.Message}");
+                Autodesk.Revit.UI.TaskDialog.Show("Error", $"Failed to export standards: {ex.Message}");
             }
             finally
             {
@@ -284,7 +494,7 @@ namespace Miller_Craft_Tools.Controller
             while (iterator.MoveNext())
             {
                 Definition definition = iterator.Key;
-                ElementBinding binding = iterator.Current as ElementBinding;
+                Autodesk.Revit.DB.ElementBinding binding = iterator.Current as ElementBinding;
 
                 if (definition != null && binding != null)
                 {

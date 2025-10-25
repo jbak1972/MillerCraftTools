@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -14,6 +14,14 @@ namespace Miller_Craft_Tools.Views
         public event EventHandler CopyToSheetsClicked;
         public event EventHandler SetupStandardsClicked;
         public event EventHandler AuditModelClicked; // New event
+        public event EventHandler ClearProjectInfoClicked; // New event
+        
+        
+        
+        
+        
+        
+         // New event
 
         public MainView()
         {
@@ -22,7 +30,7 @@ namespace Miller_Craft_Tools.Views
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button)
+            if (sender is System.Windows.Controls.Button button)
             {
                 switch (button.Tag?.ToString())
                 {
@@ -49,6 +57,9 @@ namespace Miller_Craft_Tools.Views
                         break;
                     case "AuditModel": // New case
                         AuditModelClicked?.Invoke(this, EventArgs.Empty);
+                        break;
+                    case "ClearProjectInfo":
+                        ClearProjectInfoClicked?.Invoke(this, EventArgs.Empty);
                         break;
                 }
             }

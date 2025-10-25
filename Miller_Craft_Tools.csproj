@@ -1,17 +1,23 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 	<OutputType>Library</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
-	<UseWPF>true</UseWPF>
+	  <UseWPF>true</UseWPF>
+	  <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>Miller_Craft_Tools</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>	
-	<Configurations>Debug;Release;Publish</Configurations>
+	<Configurations>Debug;Release;Publish;2025 Release;2026 Release</Configurations>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <BaseOutputPath>C:\Users\jeff\source\repos\Miller Craft Tools\bin</BaseOutputPath>
 	<GenerateDependencyFile>false</GenerateDependencyFile>
 	<GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
 	<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+	<Platforms>AnyCPU;x64</Platforms>
+	<!-- Version Info -->
+	<AssemblyVersion>1.1.1</AssemblyVersion>
+	<FileVersion>1.1.1</FileVersion>
+	<Version>1.1.1</Version>
   </PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -19,9 +25,31 @@
 		<DebugSymbols>false</DebugSymbols>
 	</PropertyGroup>
 	
+	<PropertyGroup Condition="'$(Configuration)'=='2026 Release'">
+	  <DebugType>none</DebugType>
+	  <DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)'=='2025 Release'">
+	  <DebugType>none</DebugType>
+	  <DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+	
 	<ItemGroup>
 	  <Compile Remove="Controller\FamilyController.cs" />
+	  <Compile Remove="Controller\SheetUtilitiesController.cs" />
 	  <Compile Remove="DataConnection.cs" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <None Remove="Resources\cancel.png" />
+	  <None Remove="Resources\check.png" />
+	  <None Remove="Resources\Clean16.png" />
+	  <None Remove="Resources\Clean32.png" />
+	  <None Remove="Resources\RenumViews32.png" />
+	  <None Remove="Resources\RenumWindows32.png" />
+	  <None Remove="Resources\ServerSynch16.png" />
+	  <None Remove="Resources\ServerSynch32.png" />
 	</ItemGroup>
 
   <ItemGroup>
@@ -34,19 +62,62 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Autodesk.UI.Windows">
+      <HintPath>..\..\..\..\..\Program Files\Autodesk\Revit 2026\Autodesk.UI.Windows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="RevitAPI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll</HintPath>
 		<Private>false</Private>
     </Reference>
     <Reference Include="RevitAPIUI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPIUI.dll</HintPath>
 		<Private>false</Private>
     </Reference>
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\cancel.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\check.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Clean16.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Clean32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\RenumViews32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\RenumWindows32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\ServerSynch16.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\ServerSynch32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Miller_Craft_Tools.addin">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Update="Standards\ProjectStandards.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -1,17 +1,22 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualBasic;
+using System.Windows.Forms;
 
 namespace Miller_Craft_Tools.Controller
 {
-    public class DraftingController
+    public partial class DraftingController
     {
         private Document _doc;
         private UIDocument _uidoc;
+        
+        // Public properties to access the document objects
+        public Document Document { get { return _doc; } }
+        public UIDocument UIDocument { get { return _uidoc; } }
 
         public DraftingController(Document doc, UIDocument uidoc)
         {
@@ -53,7 +58,7 @@ namespace Miller_Craft_Tools.Controller
                 catch (Exception ex)
                 {
                     transaction.RollBack();
-                    TaskDialog.Show("Error", $"An error occurred while updating detail items: {ex.Message}");
+                    Autodesk.Revit.UI.TaskDialog.Show("Error", $"An error occurred while updating detail items: {ex.Message}");
                 }
             }
         }
@@ -63,44 +68,61 @@ namespace Miller_Craft_Tools.Controller
             int startNumber = PromptForStartNumber();
             if (startNumber == -1) return;
 
+            // Check per-user settings before opening 3D views
+            var userSettings = Miller_Craft_Tools.Model.UserSettings.Load();
+            if (userSettings.Open3DViewsForRenumbering)
+            {
+                try
+                {
+                    CreateMultiple3DViews();
+                    Autodesk.Revit.UI.TaskDialog.Show(
+                        "Tile Views",
+                        "Tip: Press WT (Window > Tile) in Revit to tile all open views for easier selection."
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Autodesk.Revit.UI.TaskDialog.Show("3D View Error", $"Failed to open 3D views: {ex.Message}");
+                }
+            }
+
             RenumberWindows(startNumber);
         }
 
         private void RenumberWindows(int startNumber)
         {
             int currentNumber = startNumber;
+            Selection sel = _uidoc.Selection;
+            WindowSelectionFilter filter = new WindowSelectionFilter(_doc);
 
             while (true)
             {
                 try
                 {
-                    Reference selectedReference = _uidoc.Selection.PickObject(
-                        ObjectType.Element,
-                        new WindowSelectionFilter(),
-                        "Select a window to renumber or press ESC to finish."
-                    );
-                    if (selectedReference == null) break;
+                    Reference pickedRef = sel.PickObject(ObjectType.Element, filter, "Select a windoww to renumber or press ESC to finish.");
+                    if (pickedRef == null)
+                        continue;
 
-                    Element selectedElement = _doc.GetElement(selectedReference);
+                    Element window = _doc.GetElement(pickedRef);
 
                     using (Transaction transaction = new Transaction(_doc, "Renumber Window Mark"))
                     {
                         transaction.Start();
 
                         string markToAssign = currentNumber.ToString();
-                        if (IsMarkUsed(markToAssign, selectedElement.Id))
+                        if (IsMarkUsed(markToAssign, window.Id))
                         {
                             AssignNewMark(markToAssign);
                         }
 
-                        selectedElement.get_Parameter(BuiltInParameter.ALL_MODEL_MARK).Set(markToAssign);
+                        window.get_Parameter(BuiltInParameter.ALL_MODEL_MARK).Set(markToAssign);
 
                         transaction.Commit();
                     }
 
                     currentNumber++;
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                catch (OperationCanceledException)
                 {
                     break;
                 }
@@ -152,7 +174,7 @@ namespace Miller_Craft_Tools.Controller
 
         public void RenumberViewsOnSheet()
         {
-            View activeView = _doc.ActiveView;
+            Autodesk.Revit.DB.View activeView = _doc.ActiveView;
             ViewSheet selectedSheet;
 
             if (activeView is ViewSheet sheet)
@@ -161,9 +183,10 @@ namespace Miller_Craft_Tools.Controller
             }
             else
             {
+                // Use the public SheetFilter class instead of the internal one
                 Reference sheetReference = _uidoc.Selection.PickObject(
                     ObjectType.Element,
-                    new SheetSelectionFilter(),
+                    new Miller_Craft_Tools.Command.SheetFilter(),
                     "Select a sheet"
                 );
                 if (sheetReference == null) return;
@@ -179,14 +202,14 @@ namespace Miller_Craft_Tools.Controller
 
             if (viewportIds.Count == 0)
             {
-                TaskDialog.Show("Error", "No views found on this sheet.");
+                Autodesk.Revit.UI.TaskDialog.Show("Error", "No views found on this sheet.");
                 return;
             }
 
             int startNumber = PromptForStartNumber();
             if (startNumber == -1)
             {
-                TaskDialog.Show("Error", "Invalid number entered.");
+                Autodesk.Revit.UI.TaskDialog.Show("Error", "Invalid number entered.");
                 return;
             }
 
@@ -197,9 +220,10 @@ namespace Miller_Craft_Tools.Controller
             {
                 try
                 {
+                    // Use the public ViewportFilter class instead of the internal one
                     Reference selectedReference = _uidoc.Selection.PickObject(
                         ObjectType.Element,
-                        new ViewportSelectionFilter(viewportIds),
+                        new Miller_Craft_Tools.Command.ViewportFilter(viewportIds),
                         $"Select view {currentNumber} or press ESC to finish"
                     );
                     if (selectedReference == null) break;
@@ -231,10 +255,10 @@ namespace Miller_Craft_Tools.Controller
                     }
                     else
                     {
-                        TaskDialog.Show("Error", "This viewport has already been selected.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Error", "This viewport has already been selected.");
                     }
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+                catch (OperationCanceledException)
                 {
                     break;
                 }
@@ -284,54 +308,214 @@ namespace Miller_Craft_Tools.Controller
 
         private int PromptForStartNumber()
         {
-            string input = Interaction.InputBox("Enter starting number:", "Starting Number", "1");
-            return int.TryParse(input, out int startNumber) ? startNumber : -1;
+            // Simplify to avoid UI thread blocking issues - use Revit's native prompt
+            try 
+            {
+                // Create a simple input form that works on the Revit UI thread
+                using (var form = new System.Windows.Forms.Form())
+                {
+                    form.TopMost = true;
+                    form.Width = 350;
+                    form.Height = 150;
+                    form.Text = "Window Renumbering";
+                    form.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+                    form.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+                    form.MaximizeBox = false;
+                    form.MinimizeBox = false;
+                    
+                    // Create the label
+                    var label = new System.Windows.Forms.Label();
+                    label.Text = "Enter starting number:";
+                    label.Left = 20;
+                    label.Top = 20;
+                    label.Width = 200;
+                    form.Controls.Add(label);
+                    
+                    // Create the text box
+                    var textBox = new System.Windows.Forms.TextBox();
+                    textBox.Text = "1";
+                    textBox.Left = 20;
+                    textBox.Top = 50;
+                    textBox.Width = 100;
+                    form.Controls.Add(textBox);
+                    
+                    // Create the OK button
+                    var okButton = new System.Windows.Forms.Button();
+                    okButton.Text = "OK";
+                    okButton.Left = 130;
+                    okButton.Top = 80;
+                    okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+                    form.Controls.Add(okButton);
+                    
+                    // Create the Cancel button
+                    var cancelButton = new System.Windows.Forms.Button();
+                    cancelButton.Text = "Cancel";
+                    cancelButton.Left = 230;
+                    cancelButton.Top = 80;
+                    cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+                    form.Controls.Add(cancelButton);
+                    
+                    // Set the accept and cancel buttons
+                    form.AcceptButton = okButton;
+                    form.CancelButton = cancelButton;
+                    
+                    // Show the form and get the result
+                    if (form.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        return int.TryParse(textBox.Text, out int startNumber) ? startNumber : -1;
+                    }
+                    
+                    return -1; // User cancelled
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fall back to a simpler method if the form approach fails
+                Autodesk.Revit.UI.TaskDialog.Show("Error", $"Could not show input dialog: {ex.Message}. Using fallback method.");
+                
+                // As a last resort, try the Interaction.InputBox but with proper error handling
+                try
+                {
+                    string input = Microsoft.VisualBasic.Interaction.InputBox("Enter starting number:", "Starting Number", "1");
+                    return string.IsNullOrEmpty(input) ? -1 : (int.TryParse(input, out int startNumber) ? startNumber : -1);
+                }
+                catch
+                {
+                    return 1; // Provide a default if all else fails
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates multiple 3D views from different isometric angles for better window selection
+        /// </summary>
+        public void CreateMultiple3DViews()
+        {
+            var directions = new List<XYZ>
+            {
+                new XYZ(1, 1, 1),    // NE Isometric
+                new XYZ(-1, 1, 1),   // NW Isometric
+                new XYZ(-1, -1, 1),  // SW Isometric
+                new XYZ(1, -1, 1)    // SE Isometric
+            };
+
+            var default3DView = new FilteredElementCollector(_doc)
+                .OfClass(typeof(View3D))
+                .Cast<View3D>()
+                .FirstOrDefault(v => !v.IsTemplate && v.Name.Equals("{3D}", StringComparison.OrdinalIgnoreCase));
+
+            if (default3DView == null)
+                throw new InvalidOperationException("Default 3D view '{3D}' not found.");
+
+            List<View3D> createdViews = new List<View3D>();
+            using (Transaction tx = new Transaction(_doc, "Create Isometric 3D Views for Window Renumbering"))
+            {
+                tx.Start();
+                foreach (var dir in directions)
+                {
+                    View3D new3DView = _doc.GetElement(default3DView.Duplicate(ViewDuplicateOption.Duplicate)) as View3D;
+                    if (new3DView == null)
+                        throw new InvalidOperationException("Failed to duplicate 3D view.");
+
+                    ViewOrientation3D orientation = new ViewOrientation3D(
+                        new XYZ(0, 0, 0),
+                        dir,
+                        XYZ.BasisZ
+                    );
+                    new3DView.SetOrientation(orientation);
+
+                    string dirName = $"Isometric ({dir.X:+#;-#;0},{dir.Y:+#;-#;0},{dir.Z:+#;-#;0})";
+                    new3DView.Name = $"Window Renumber - {dirName} - {DateTime.Now:HHmmss}";
+                    createdViews.Add(new3DView);
+                }
+                tx.Commit();
+            }
+
+            foreach (var v in createdViews)
+            {
+                try
+                {
+                    _uidoc.ActiveView = v;
+                }
+                catch (Exception ex)
+                {
+                    Autodesk.Revit.UI.TaskDialog.Show("View Activation Error", $"Could not activate 3D view '{v.Name}': {ex.Message}");
+                }
+            }
+
+            Autodesk.Revit.UI.TaskDialog.Show(
+                "3D Views Opened",
+                "Multiple 3D views from different isometric angles have been created and opened. You can now use them to select windows for renumbering more easily."
+            );
         }
     }
 
-    internal class WindowSelectionFilter : ISelectionFilter
-    {
-        public bool AllowElement(Element elem)
+        // Inner selection filter classes for DraftingController
+        internal class WindowSelectionFilter : ISelectionFilter
         {
-            return elem.Category?.Id.IntegerValue == (int)BuiltInCategory.OST_Windows;
+            private readonly Document _doc;
+
+            public WindowSelectionFilter(Document document)
+            {
+                _doc = document;
+            }
+
+            public bool AllowElement(Element elem)
+            {
+                // Check if the element is a window
+                return elem != null && elem.Category != null && elem.Category.Id.Equals(new ElementId(BuiltInCategory.OST_Windows));
+            }
+
+            public bool AllowReference(Reference reference, XYZ position)
+            {
+                // Get the element from the reference
+                if (reference == null || _doc == null) return false;
+                
+                try
+                {
+                    Element elem = _doc.GetElement(reference);
+                    // Check if it's a window
+                    return AllowElement(elem);
+                }
+                catch
+                {
+                    // If we can't get the element for some reason, don't allow the reference
+                    return false;
+                }
+            }
         }
 
-        public bool AllowReference(Reference reference, XYZ position)
+        internal class SheetSelectionFilter : ISelectionFilter
         {
-            return false;
-        }
-    }
+            public bool AllowElement(Element elem)
+            {
+                return elem is ViewSheet;
+            }
 
-    internal class SheetSelectionFilter : ISelectionFilter
-    {
-        public bool AllowElement(Element elem)
-        {
-            return elem is ViewSheet;
-        }
-
-        public bool AllowReference(Reference reference, XYZ position)
-        {
-            return true;
-        }
-    }
-
-    internal class ViewportSelectionFilter : ISelectionFilter
-    {
-        private readonly List<ElementId> _validViewportIds;
-
-        public ViewportSelectionFilter(List<ElementId> viewportIds)
-        {
-            _validViewportIds = viewportIds;
+            public bool AllowReference(Reference reference, XYZ position)
+            {
+                return true;
+            }
         }
 
-        public bool AllowElement(Element elem)
+        internal class ViewportSelectionFilter : ISelectionFilter
         {
-            return _validViewportIds.Contains(elem.Id);
-        }
+            private readonly List<ElementId> _validViewportIds;
 
-        public bool AllowReference(Reference reference, XYZ position)
-        {
-            return true;
+            public ViewportSelectionFilter(List<ElementId> viewportIds)
+            {
+                _validViewportIds = viewportIds ?? new List<ElementId>();
+            }
+
+            public bool AllowElement(Element elem)
+            {
+                if (elem == null || _validViewportIds == null) return false;
+                return _validViewportIds.Contains(elem.Id);
+            }
+
+            public bool AllowReference(Reference reference, XYZ position)
+            {
+                return true;
+            }
         }
-    }
 }

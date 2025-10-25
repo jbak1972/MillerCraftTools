@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using Miller_Craft_Tools.Model;
@@ -7,6 +7,8 @@ using Miller_Craft_Tools.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
+using System.Windows.Data;
 
 namespace Miller_Craft_Tools.Controller
 {
@@ -27,9 +29,9 @@ namespace Miller_Craft_Tools.Controller
             _doc = uidoc.Document;
         }
 
-        public void CopyToSheets(MainView view)
+        public void CopyToSheets(Autodesk.Revit.DB.View view)
         {
-            view.HideDialog();
+            view.ShowDialog();
             try
             {
                 // Show the dialog to select what to copy
@@ -40,14 +42,14 @@ namespace Miller_Craft_Tools.Controller
                 bool? dialogResult = dialog.ShowDialog();
                 if (dialogResult != true)
                 {
-                    TaskDialog.Show("Canceled", "Operation canceled by the user.");
+                    Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Canceled", "Operation canceled by the user.");
                     return;
                 }
 
                 // Validate that the active view is a sheet
-                if (!(_uidoc.ActiveView is ViewSheet sourceSheet))
+                if (!(_uidoc.ActiveView is Autodesk.Revit.DB.ViewSheet sourceSheet))
                 {
-                    TaskDialog.Show("Error", "The active view must be a sheet view.");
+                    Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "The active view must be a sheet view.");
                     return;
                 }
 
@@ -70,7 +72,7 @@ namespace Miller_Craft_Tools.Controller
 
                         if (selectedRefs.Count != 2)
                         {
-                            TaskDialog.Show("Error", "Please select exactly one revision cloud and one revision tag.");
+                            Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "Please select exactly one revision cloud and one revision tag.");
                             return;
                         }
 
@@ -81,7 +83,7 @@ namespace Miller_Craft_Tools.Controller
                             {
                                 if (revisionCloud != null)
                                 {
-                                    TaskDialog.Show("Error", "Only one revision cloud should be selected.");
+                                    Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "Only one revision cloud should be selected.");
                                     return;
                                 }
                                 revisionCloud = cloud;
@@ -90,7 +92,7 @@ namespace Miller_Craft_Tools.Controller
                             {
                                 if (tagPosition != null)
                                 {
-                                    TaskDialog.Show("Error", "Only one revision tag should be selected.");
+                                    Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "Only one revision tag should be selected.");
                                     return;
                                 }
                                 tagTypeId = tag.GetTypeId();
@@ -100,13 +102,13 @@ namespace Miller_Craft_Tools.Controller
 
                         if (revisionCloud == null || tagPosition == null || tagTypeId == null)
                         {
-                            TaskDialog.Show("Error", "Please select exactly one revision cloud and one revision tag.");
+                            Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "Please select exactly one revision cloud and one revision tag.");
                             return;
                         }
                     }
                     catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                     {
-                        TaskDialog.Show("Canceled", "Selection canceled by the user.");
+                        Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Canceled", "Selection canceled by the user.");
                         return;
                     }
                 }
@@ -119,14 +121,14 @@ namespace Miller_Craft_Tools.Controller
                         legendViewport = _doc.GetElement(viewportRef) as Viewport;
                         if (legendViewport == null)
                         {
-                            TaskDialog.Show("Error", "Selected element is not a viewport.");
+                            Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "Selected element is not a viewport.");
                             return;
                         }
 
-                        View legendView = _doc.GetElement(legendViewport.ViewId) as View;
+                        Autodesk.Revit.DB.View legendView = _doc.GetElement(legendViewport.ViewId) as Autodesk.Revit.DB.View;
                         if (legendView == null || legendView.ViewType != ViewType.Legend)
                         {
-                            TaskDialog.Show("Error", "Selected viewport does not reference a legend view.");
+                            Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "Selected viewport does not reference a legend view.");
                             return;
                         }
 
@@ -135,22 +137,22 @@ namespace Miller_Craft_Tools.Controller
                     }
                     catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                     {
-                        TaskDialog.Show("Canceled", "Selection canceled by the user.");
+                        Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Canceled", "Selection canceled by the user.");
                         return;
                     }
                 }
 
                 // Collect all sheets except the source sheet
                 FilteredElementCollector sheetCollector = new FilteredElementCollector(_doc)
-                    .OfClass(typeof(ViewSheet));
-                List<ViewSheet> targetSheets = sheetCollector
-                    .Cast<ViewSheet>()
+                    .OfClass(typeof(Autodesk.Revit.DB.ViewSheet));
+                List<Autodesk.Revit.DB.ViewSheet> targetSheets = sheetCollector
+                    .Cast<Autodesk.Revit.DB.ViewSheet>()
                     .Where(s => s.Id != sourceSheet.Id)
                     .ToList();
 
                 if (targetSheets.Count == 0)
                 {
-                    TaskDialog.Show("Warning", "No other sheets found in the project.");
+                    Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Warning", "No other sheets found in the project.");
                     return;
                 }
 
@@ -160,7 +162,7 @@ namespace Miller_Craft_Tools.Controller
                     using (Transaction tx = new Transaction(_doc, "Copy Revision Clouds"))
                     {
                         tx.Start();
-                        foreach (ViewSheet targetSheet in targetSheets)
+                        foreach (Autodesk.Revit.DB.ViewSheet targetSheet in targetSheets)
                         {
                             ElementId[] elementsToCopy = new ElementId[] { revisionCloud.Id };
                             IList<ElementId> copiedElementIds = ElementTransformUtils.CopyElements(
@@ -174,14 +176,14 @@ namespace Miller_Craft_Tools.Controller
                             ElementId copiedRevisionCloudId = copiedElementIds.FirstOrDefault();
                             if (copiedRevisionCloudId == null)
                             {
-                                TaskDialog.Show("Error", "Failed to copy the revision cloud to one of the sheets.");
+                                Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "Failed to copy the revision cloud to one of the sheets.");
                                 continue;
                             }
 
                             RevisionCloud copiedRevisionCloud = _doc.GetElement(copiedRevisionCloudId) as RevisionCloud;
                             if (copiedRevisionCloud == null)
                             {
-                                TaskDialog.Show("Error", "Failed to retrieve the copied revision cloud.");
+                                Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", "Failed to retrieve the copied revision cloud.");
                                 continue;
                             }
 
@@ -207,7 +209,7 @@ namespace Miller_Craft_Tools.Controller
                     using (Transaction tx = new Transaction(_doc, "Copy Legends"))
                     {
                         tx.Start();
-                        foreach (ViewSheet targetSheet in targetSheets)
+                        foreach (Autodesk.Revit.DB.ViewSheet targetSheet in targetSheets)
                         {
                             Viewport.Create(_doc, targetSheet.Id, legendViewId, legendPosition);
                         }
@@ -215,15 +217,15 @@ namespace Miller_Craft_Tools.Controller
                     }
                 }
 
-                TaskDialog.Show("Success", $"Copied to {targetSheets.Count} sheets.");
+                Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Success", $"Copied to {targetSheets.Count} sheets.");
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Error", $"Failed to copy elements: {ex.Message}");
+                Autodesk.Revit.UI.Autodesk.Revit.UI.TaskDialog.Show("Error", $"Failed to copy elements: {ex.Message}");
             }
             finally
             {
-                view.ShowDialogAgain();
+                view.ShowDialog();
             }
         }
     }

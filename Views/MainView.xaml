@@ -1,4 +1,4 @@
-﻿<Window x:Class="Miller_Craft_Tools.Views.MainView"
+<Window x:Class="Miller_Craft_Tools.Views.MainView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Miller Craft Utilities" Height="600" Width="600" WindowStartupLocation="CenterScreen">
@@ -26,6 +26,7 @@
                         <Button Content="Setup Standards" ToolTip="Apply the project standards version to the project and families." Width="200" Height="30" Margin="10" Tag="SetupStandards" Click="Button_Click"/>
                         <!-- New Audit Model Button -->
                         <Button Content="Audit Model" ToolTip="Audit the model and display statistics like file size and element counts." Width="200" Height="30" Margin="10" Tag="AuditModel" Click="Button_Click"/>
+                        <Button Content="Clear Project Info" ToolTip="Clear all project-specific information including MC Project GUID. Use this when starting a new project from a copy." Width="200" Height="30" Margin="10" Tag="ClearProjectInfo" Click="Button_Click"/>
                     </StackPanel>
                 </GroupBox>
             </StackPanel>

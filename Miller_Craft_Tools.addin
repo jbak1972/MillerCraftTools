@@ -3,7 +3,7 @@
 	<AddIn Type="Application">
 		<Name>Miller Craft Tools</Name>
 		<Description>Utilities for drafting and inspection in Revit</Description>
-		<Assembly>Miller_Craft_Tools.dll</Assembly>
+		<Assembly>Miller_Craft_Assistant/Miller_Craft_Tools.dll</Assembly>
 		<FullClassName>Miller_Craft_Tools.MillerCraftApp</FullClassName>
 		<AddInId>A19EA004-8880-46E4-9802-600E8C793180</AddInId>
 		<VendorId>MillerCraft</VendorId>

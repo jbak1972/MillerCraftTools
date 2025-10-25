@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
@@ -124,5 +124,8 @@ namespace Miller_Craft_Tools.Views
         // Import the SetForegroundWindow function from user32.dll to bring Revit window into focus
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        public void ShowDialogAgain() => Show();
+        public void HideDialog() => Hide();
     }
 }

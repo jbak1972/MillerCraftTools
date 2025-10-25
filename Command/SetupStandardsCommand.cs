@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
@@ -55,7 +55,7 @@ namespace Miller_Craft_Tools.Command
                 string jsonPath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Standards", "ProjectStandards.json");
                 if (!File.Exists(jsonPath))
                 {
-                    TaskDialog.Show("Error", $"ProjectStandards.json not found at {jsonPath}.");
+                    Autodesk.Revit.UI.TaskDialog.Show("Error", $"ProjectStandards.json not found at {jsonPath}.");
                     return Result.Failed;
                 }
 
@@ -63,7 +63,7 @@ namespace Miller_Craft_Tools.Command
                 var standards = JsonSerializer.Deserialize<ProjectStandards>(jsonContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (standards == null)
                 {
-                    TaskDialog.Show("Error", "Failed to deserialize ProjectStandards.json.");
+                    Autodesk.Revit.UI.TaskDialog.Show("Error", "Failed to deserialize ProjectStandards.json.");
                     return Result.Failed;
                 }
 
@@ -71,7 +71,7 @@ namespace Miller_Craft_Tools.Command
                 var versionParameter = standards.ProjectParameters?.FirstOrDefault(p => p.Name == "StandardsVersion");
                 if (versionParameter == null)
                 {
-                    TaskDialog.Show("Error", "StandardsVersion parameter not found in ProjectStandards.json.");
+                    Autodesk.Revit.UI.TaskDialog.Show("Error", "StandardsVersion parameter not found in ProjectStandards.json.");
                     return Result.Failed;
                 }
 
@@ -84,7 +84,7 @@ namespace Miller_Craft_Tools.Command
                     Category projectInfoCategory = doc.Settings.Categories.get_Item(BuiltInCategory.OST_ProjectInformation);
                     if (projectInfoCategory == null)
                     {
-                        TaskDialog.Show("Error", "Project Information category not found.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Error", "Project Information category not found.");
                         tx.RollBack();
                         return Result.Failed;
                     }
@@ -98,7 +98,7 @@ namespace Miller_Craft_Tools.Command
                     ExternalDefinition definition = defGroup.Definitions.get_Item(versionParameter.Name) as ExternalDefinition ?? defGroup.Definitions.Create(options) as ExternalDefinition;
                     if (definition == null)
                     {
-                        TaskDialog.Show("Error", $"Failed to create or find shared parameter definition for '{versionParameter.Name}'.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Error", $"Failed to create or find shared parameter definition for '{versionParameter.Name}'.");
                         tx.RollBack();
                         return Result.Failed;
                     }
@@ -106,13 +106,13 @@ namespace Miller_Craft_Tools.Command
                     // Bind the parameter to Project Information using ForgeTypeId for Identity Data
                     CategorySet categories = doc.Application.Create.NewCategorySet();
                     categories.Insert(projectInfoCategory);
-                    Binding binding = doc.Application.Create.NewInstanceBinding(categories);
+                    Autodesk.Revit.DB.InstanceBinding binding = doc.Application.Create.NewInstanceBinding(categories);
                     if (!doc.ParameterBindings.ReInsert(definition, binding, GroupTypeId.IdentityData))
                     {
                         // If ReInsert fails, try Insert (in case the binding doesn't exist)
                         if (!doc.ParameterBindings.Insert(definition, binding, GroupTypeId.IdentityData))
                         {
-                            TaskDialog.Show("Error", $"Failed to bind parameter '{versionParameter.Name}' to Project Information.");
+                            Autodesk.Revit.UI.TaskDialog.Show("Error", $"Failed to bind parameter '{versionParameter.Name}' to Project Information.");
                             tx.RollBack();
                             return Result.Failed;
                         }
@@ -124,7 +124,7 @@ namespace Miller_Craft_Tools.Command
                         .FirstElement();
                     if (projectInfo == null)
                     {
-                        TaskDialog.Show("Error", "Project Information element not found.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Error", "Project Information element not found.");
                         tx.RollBack();
                         return Result.Failed;
                     }
@@ -132,14 +132,14 @@ namespace Miller_Craft_Tools.Command
                     Parameter param = projectInfo.LookupParameter(versionParameter.Name);
                     if (param == null)
                     {
-                        TaskDialog.Show("Error", $"Parameter '{versionParameter.Name}' not found on Project Information element after binding.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Error", $"Parameter '{versionParameter.Name}' not found on Project Information element after binding.");
                         tx.RollBack();
                         return Result.Failed;
                     }
 
                     if (!param.Set(standardsVersion))
                     {
-                        TaskDialog.Show("Error", $"Failed to set value '{standardsVersion}' for parameter '{versionParameter.Name}' on Project Information.");
+                        Autodesk.Revit.UI.TaskDialog.Show("Error", $"Failed to set value '{standardsVersion}' for parameter '{versionParameter.Name}' on Project Information.");
                         tx.RollBack();
                         return Result.Failed;
                     }
@@ -160,7 +160,7 @@ namespace Miller_Craft_Tools.Command
 
                 if (familySymbols.Count == 0)
                 {
-                    TaskDialog.Show("Info", "No Detail Item families starting with 'D.ANNO' were found in the project.");
+                    Autodesk.Revit.UI.TaskDialog.Show("Info", "No Detail Item families starting with 'D.ANNO' were found in the project.");
                 }
                 else
                 {
@@ -173,7 +173,7 @@ namespace Miller_Craft_Tools.Command
                         Document familyDoc = doc.EditFamily(family);
                         if (familyDoc == null)
                         {
-                            TaskDialog.Show("Warning", $"Failed to open family '{family.Name}' for editing. Skipping.");
+                            Autodesk.Revit.UI.TaskDialog.Show("Warning", $"Failed to open family '{family.Name}' for editing. Skipping.");
                             continue;
                         }
 
@@ -195,7 +195,7 @@ namespace Miller_Craft_Tools.Command
                                         versionParameter.IsInstance);
                                     if (familyParam == null)
                                     {
-                                        TaskDialog.Show("Warning", $"Failed to add parameter '{versionParameter.Name}' to family '{family.Name}'. Skipping.");
+                                        Autodesk.Revit.UI.TaskDialog.Show("Warning", $"Failed to add parameter '{versionParameter.Name}' to family '{family.Name}'. Skipping.");
                                         familyTx.RollBack();
                                         continue;
                                     }
@@ -213,7 +213,7 @@ namespace Miller_Craft_Tools.Command
                                     }
                                     catch (Exception ex)
                                     {
-                                        TaskDialog.Show("Warning", $"Failed to reload family '{family.Name}' into the project: {ex.Message}. Changes may not be applied.");
+                                        Autodesk.Revit.UI.TaskDialog.Show("Warning", $"Failed to reload family '{family.Name}' into the project: {ex.Message}. Changes may not be applied.");
                                     }
                                 }
 
@@ -227,12 +227,12 @@ namespace Miller_Craft_Tools.Command
                             }
                             catch (Exception ex)
                             {
-                                TaskDialog.Show("Warning", $"Failed to reload family '{family.Name}' into the project: {ex.Message}. Changes may not be applied.");
+                                Autodesk.Revit.UI.TaskDialog.Show("Warning", $"Failed to reload family '{family.Name}' into the project: {ex.Message}. Changes may not be applied.");
                             }
                         }
                         catch (Exception ex)
                         {
-                            TaskDialog.Show("Warning", $"Error processing family '{family.Name}': {ex.Message}. Skipping.");
+                            Autodesk.Revit.UI.TaskDialog.Show("Warning", $"Error processing family '{family.Name}': {ex.Message}. Skipping.");
                         }
                         finally
                         {
@@ -241,13 +241,13 @@ namespace Miller_Craft_Tools.Command
                     }
                 }
 
-                TaskDialog.Show("Success", $"Applied StandardsVersion '{standardsVersion}' to project and selected families.");
+                Autodesk.Revit.UI.TaskDialog.Show("Success", $"Applied StandardsVersion '{standardsVersion}' to project and selected families.");
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
                 message = ex.Message;
-                TaskDialog.Show("Error", $"Failed to apply standards: {ex.Message}");
+                Autodesk.Revit.UI.TaskDialog.Show("Error", $"Failed to apply standards: {ex.Message}");
                 return Result.Failed;
             }
         }

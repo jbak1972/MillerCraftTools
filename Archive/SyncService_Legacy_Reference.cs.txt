@@ -1,0 +1,349 @@
+using System;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using Newtonsoft.Json;
+using Miller_Craft_Tools.Model;
+using Miller_Craft_Tools.Utils;
+using Autodesk.Revit.UI;
+using Autodesk.Revit.DB;
+
+namespace Miller_Craft_Tools.Services
+{
+    /// <summary>
+    /// Handles the multi-step communication protocol for syncing with the Miller Craft Assistant server
+    /// </summary>
+    public class SyncService
+    {
+        // Base API URL
+        private const string BaseApiUrl = "https://app.millercraftllc.com/api";
+        
+        // Sync endpoint
+        private const string SyncEndpoint = BaseApiUrl + "/sync";
+        
+        // Maximum file size before using chunked upload (5MB)
+        private const int MaxFileSize = 5 * 1024 * 1024;
+        
+        // Progress handler for reporting upload progress
+        private readonly IProgress<(int current, int total)> _progressHandler;
+        
+        // Cancellation token source for cancelling operations
+        private readonly CancellationToken _cancellationToken;
+
+        public SyncService(IProgress<(int current, int total)> progressHandler = null, CancellationToken cancellationToken = default)
+        {
+            _progressHandler = progressHandler;
+            _cancellationToken = cancellationToken;
+        }
+
+        /// <summary>
+        /// Prepares project data for sync and executes the multi-step sync process with the server
+        /// </summary>
+        public async Task<bool> SyncProjectAsync(Document doc, string projectGuid)
+        {
+            try
+            {
+                // Collect project data
+                ProjectInfoExportModel exportModel = CollectProjectData(doc, projectGuid);
+                
+                // Log the collected data
+                Logger.LogJson(exportModel, "export_project_info");
+                
+                // Execute the sync process
+                return await SyncWithServerAsync(exportModel, projectGuid, doc.PathName);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Failed to prepare project data: {ex.Message}");
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// Collects all project parameters for export
+        /// </summary>
+        private ProjectInfoExportModel CollectProjectData(Document doc, string projectGuid)
+        {
+            ProjectInfoExportModel exportModel = new ProjectInfoExportModel();
+            ProjectInfo projInfo = doc.ProjectInformation;
+            
+            // Set basic project identification
+            exportModel.ProjectId = projectGuid;
+            exportModel.FileName = Path.GetFileName(doc.PathName);
+            
+            // Add the ProjectGUID parameter
+            exportModel.Parameters.Add(new ProjectParameterExport
+            {
+                Name = "sp.MC.ProjectGUID",
+                Value = projectGuid,
+                Type = "String",
+                Update = false
+            });
+            
+            // Track existing parameters to avoid duplicates
+            var addedParameterNames = new HashSet<string>();
+            addedParameterNames.Add("sp.MC.ProjectGUID"); // Already added this one
+            
+            foreach (Parameter param in projInfo.Parameters)
+            {
+                string name = param.Definition.Name;
+                
+                // Skip duplicate parameters
+                if (addedParameterNames.Contains(name))
+                    continue;
+                
+                addedParameterNames.Add(name);
+                
+                string value = param.AsValueString() ?? param.AsString() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(value) || value.Trim() == "-")
+                    value = string.Empty;
+                    
+                string type = param.StorageType.ToString();
+                
+                exportModel.Parameters.Add(new ProjectParameterExport
+                {
+                    Name = name,
+                    Value = value,
+                    Type = type,
+                    Update = false
+                });
+            }
+            
+            return exportModel;
+        }
+        
+        /// <summary>
+        /// Executes the multi-step sync process with the server
+        /// </summary>
+        private async Task<bool> SyncWithServerAsync(
+            ProjectInfoExportModel exportModel,
+            string projectGuid,
+            string documentPath)
+        {
+            // Start time of the sync process to track overall duration
+            DateTime syncStartTime = DateTime.UtcNow;
+            
+            string token = Miller_Craft_Tools.PluginSettings.GetToken();
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new InvalidOperationException("No API token found. Please enter your token in Settings.");
+            }
+            
+            try 
+            {
+                // Step 1: Initial handshake
+                // For each sync operation, we create a fresh session as recommended
+                var sessionData = await PerformHandshake(projectGuid, token);
+                
+                // Start tracking elapsed time to ensure we stay within the 8-minute recommendation
+                TimeSpan elapsed = DateTime.UtcNow - syncStartTime;
+                if (elapsed.TotalMinutes > 7.5) // Approaching 8-min limit
+                {
+                    Logger.LogError("Sync operation approaching timeout threshold");
+                }
+                
+                // Step 2: Upload parameters
+                var uploadResponse = await UploadParameters(exportModel, projectGuid, sessionData, token);
+                
+                // Step 3: Trigger processing
+                var processingResponse = await TriggerProcessing(sessionData.SessionId, uploadResponse.NextStep, token);
+                
+                // Step 4: Handle parameter updates if needed
+                if (processingResponse.Result != null)
+                {
+                    // Handle parameter updates if needed
+                    Logger.LogJson(processingResponse.Result, "parameters_to_update");
+                }
+                
+                // Log total sync duration
+                elapsed = DateTime.UtcNow - syncStartTime;
+                Logger.LogJson(new { Action = "Sync Completed", TotalDurationMs = elapsed.TotalMilliseconds }, "sync_timing");
+                
+                return true;
+            }
+            catch (SessionExpiredException ex)
+            {
+                // Handle session expiration specifically as recommended
+                Logger.LogError($"Session expired: {ex.Message}");
+                
+                // We could implement a retry mechanism here if needed
+                // For now, we'll rethrow with a clearer message
+                throw new SessionExpiredException("Your session with Miller Craft Assistant expired. Please try again.", ex);
+            }
+            catch (SyncTimeoutException ex)
+            {
+                Logger.LogError($"Sync operation timed out: {ex.Message}");
+                throw; // Rethrow for proper handling in the command
+            }
+            catch (SyncNetworkException ex)
+            {
+                Logger.LogError($"Network error during sync: {ex.Message}");
+                throw; // Rethrow for proper handling in the command
+            }
+            catch (Exception ex)
+            {
+                // Log all other errors
+                Logger.LogError($"Sync process failed: {ex.Message}");
+                throw; // Rethrow for proper handling in the command
+            }
+        }
+
+        /// <summary>
+        /// Performs the initial handshake with the server to establish a session
+        /// </summary>
+        private async Task<SessionResponse> PerformHandshake(string projectGuid, string token)
+        {
+            // Create handshake request with new client ID for every sync operation
+            // Following recommendation to always start fresh sessions
+            var handshakeRequest = new
+            {
+                command = "initiate_sync",
+                clientId = "revit-client-" + Guid.NewGuid().ToString(),
+                projectGuid = projectGuid,
+                requestType = "parameter_sync",
+                timestamp = DateTime.UtcNow.ToString("o")
+            };
+            
+            // Convert to JSON
+            string handshakeJson = JsonConvert.SerializeObject(handshakeRequest);
+            
+            Logger.LogJson(handshakeRequest, "handshake_request");
+            
+            try
+            {
+                // Send the handshake request
+                string handshakeResponseJson = await HttpClientHelper.SendJsonRequestAsync(
+                    SyncEndpoint,
+                    handshakeJson,
+                    token,
+                    _cancellationToken);
+                    
+                // Parse the handshake response
+                var sessionData = JsonConvert.DeserializeObject<SessionResponse>(handshakeResponseJson);
+                
+                if (sessionData.Status != "success")
+                {
+                    // Check for specific error codes
+                    if (sessionData.Code == 400 && 
+                        (sessionData.ErrorCode == "InvalidSessionId" || sessionData.ErrorCode == "ExpiredSession"))
+                    {
+                        throw new SessionExpiredException("Session has expired or is invalid. Please try again.");
+                    }
+                    
+                    throw new InvalidOperationException($"Handshake failed: {sessionData.Status} - {sessionData.Message}");
+                }
+                
+                Logger.LogJson(sessionData, "handshake_response");
+                
+                return sessionData;
+            }
+            catch (HttpRequestException ex)
+            {
+                Logger.LogError($"Network error during handshake: {ex.Message}");
+                throw new SyncNetworkException("Unable to connect to Miller Craft Assistant. Please check your network connection.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Uploads the parameters to the server
+        /// </summary>
+        private async Task<UploadResponse> UploadParameters(
+            ProjectInfoExportModel exportModel, 
+            string projectGuid, 
+            SessionResponse sessionData, 
+            string token)
+        {
+            // Prepare the upload
+            string filename = $"project_info_{projectGuid}.json";
+            string parametersJson = JsonConvert.SerializeObject(exportModel);
+            
+            // Check file size to determine if we need chunked upload
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(parametersJson);
+            bool useChunkedUpload = jsonBytes.Length > MaxFileSize;
+            
+            string uploadResponseJson;
+            
+            if (useChunkedUpload)
+            {
+                // Use chunked upload for large files
+                var chunkTracker = await HttpClientHelper.SendChunkedMultipartRequestAsync(
+                    sessionData.UploadUrl,
+                    parametersJson,
+                    filename,
+                    sessionData.SessionId,
+                    token,
+                    sessionData.MaxChunkSize,
+                    _cancellationToken);
+                    
+                // Continue uploading chunks until complete
+                uploadResponseJson = await HttpClientHelper.ContinueChunkedUploadAsync(
+                    sessionData.UploadUrl,
+                    chunkTracker,
+                    token,
+                    _progressHandler,
+                    _cancellationToken);
+            }
+            else
+            {
+                // Use simple upload for small files
+                uploadResponseJson = await HttpClientHelper.SendMultipartRequestAsync(
+                    sessionData.UploadUrl,
+                    parametersJson,
+                    filename,
+                    token,
+                    _cancellationToken);
+            }
+            
+            // Parse the upload response
+            var uploadResponse = JsonConvert.DeserializeObject<UploadResponse>(uploadResponseJson);
+            
+            if (uploadResponse.Status != "success")
+            {
+                throw new InvalidOperationException($"Upload failed: {uploadResponse.Message}");
+            }
+            
+            Logger.LogJson(uploadResponse, "upload_response");
+            
+            return uploadResponse;
+        }
+
+        /// <summary>
+        /// Triggers processing of the uploaded parameters
+        /// </summary>
+        private async Task<ProcessingResponse> TriggerProcessing(
+            string sessionId,
+            string processingUrl, 
+            string token)
+        {
+            var processingRequest = new
+            {
+                sessionId = sessionId,
+                command = "process"
+            };
+            
+            string processingJson = JsonConvert.SerializeObject(processingRequest);
+            
+            string processingResponseJson = await HttpClientHelper.SendJsonRequestAsync(
+                processingUrl,
+                processingJson,
+                token,
+                _cancellationToken);
+                
+            // Parse the processing response
+            var processingResponse = JsonConvert.DeserializeObject<ProcessingResponse>(processingResponseJson);
+            
+            if (processingResponse.Status != "success")
+            {
+                throw new InvalidOperationException($"Processing failed: {processingResponse.Message}");
+            }
+            
+            Logger.LogJson(processingResponse, "processing_response");
+            
+            return processingResponse;
+        }
+    }
+}
